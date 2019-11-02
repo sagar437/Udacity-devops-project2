@@ -1,1 +1,1 @@
-aws cloudformation create-stack --stack-name $1 --template-body file://$2 --parameters file://$3 --region=us-west-2 --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name sagarapp --template-body file://network.yml --parameters file://network.json --region=us-west-2 --capabilities CAPABILITY_NAMED_IAM
