@@ -244,7 +244,7 @@ Resources:
     LBSecurityGroup:
             Type: AWS::EC2::SecurityGroup
             Properties:
-                GroupDescription: Allow http traffic to and from load balancer
+                GroupDescription: Http traffic to LB
                 VpcId: !Ref VPC
                 SecurityGroupIngress:
                 -   IpProtocol: tcp
@@ -260,7 +260,7 @@ Resources:
     UdagramSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
-            GroupDescription: Allow http and ssh to our load balancer
+            GroupDescription: Allow http and ssh to LB
             VpcId: !Ref VPC
             SecurityGroupIngress:
             -   IpProtocol: tcp
@@ -293,7 +293,6 @@ Resources:
                     unzip -o udacity.zip
                     cp -pir udacity/index.html .
             ImageId: ami-06d51e91cea0dac8d
-            KeyName: Sagar_AWS
             IamInstanceProfile: !Ref ProfileWithRolesForOurApp
             SecurityGroups:
             -   Ref: UdagramSecurityGroup
@@ -363,6 +362,12 @@ Resources:
 
 Outputs:
 
+    WebAppLoadBalancerDNSName:
+        Description: URL of the Load Balancer
+        Value: !Join [ "", [ 'http://', !GetAtt UdagramLB.DNSName ]]
+        Export:
+          Name: !Sub ${EnvironmentName}-LB-DNSName
+
     VPC:
         Description: A reference to the created VPC
         Value: !Ref VPC
@@ -422,9 +427,3 @@ Outputs:
         Value: !Ref PrivateSubnet2
         Export:
           Name: !Sub ${EnvironmentName}-PRI2-SN
-
-    WebAppLoadBalancerDNSName:
-        Description: DNS name or Public URL of the Load Balancer
-        Value: !Join [ "", [ 'http://', !GetAtt UdagramLB.DNSName ]]
-        Export:
-            Name: !Sub ${EnvironmentName}-LB-DNSName
