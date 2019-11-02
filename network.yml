@@ -257,7 +257,7 @@ Resources:
                     ToPort: 80
                     CidrIp: 0.0.0.0/0
 
-    UdagramSecGroup:
+    UdagramSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
             GroupDescription: Allow http and ssh to our load balancer
@@ -296,10 +296,10 @@ Resources:
             KeyName: Sagar_AWS
             IamInstanceProfile: !Ref ProfileWithRolesForOurApp
             SecurityGroups:
-            -   Ref: UdagramSecGroup
+            -   Ref: UdagramSecurityGroup
             InstanceType: !Ref 'InstanceType'
             BlockDeviceMappings:
-            -   DeviceName: "/dev/sda"
+            -   DeviceName: "/dev/sdk"
                 Ebs:
                     VolumeSize: '10' #10GB
 
@@ -316,7 +316,7 @@ Resources:
             UnhealthyThresholdCount: 5
             VpcId: !Ref VPC
 
-    UgadramGroup:
+    UdagramGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties:
             VPCZoneIdentifier:
@@ -329,7 +329,7 @@ Resources:
             TargetGroupARNs:
             -   Ref: UdagramTargetGroup
 
-    UdagramLoadBalancer:
+    UdagramLB:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
             SecurityGroups:
@@ -345,11 +345,11 @@ Resources:
                 TargetGroupArn:
                     Ref: UdagramTargetGroup
             LoadBalancerArn:
-                Ref: UdagramLoadBalancer
+                Ref: UdagramLB
             Port: 80
             Protocol: HTTP
 
-    ALBListenerRule:
+    LBListenerRule:
         Type: AWS::ElasticLoadBalancingV2::ListenerRule
         Properties:
             Actions:
@@ -362,12 +362,6 @@ Resources:
             Priority: 1
 
 Outputs:
-
-    UdagramLoadBalancerDNSName:
-      Description: DNS name or Public URL of the Load Balancer
-      Value: !Join [ "", [ 'http://', !GetAtt UdagramLoadBalancer.DNSName ]]
-      Export:
-          Name: !Sub ${EnvironmentName}-LB-DNSName
 
     VPC:
         Description: A reference to the created VPC
@@ -428,3 +422,9 @@ Outputs:
         Value: !Ref PrivateSubnet2
         Export:
           Name: !Sub ${EnvironmentName}-PRI2-SN
+
+    WebAppLoadBalancerDNSName:
+        Description: DNS name or Public URL of the Load Balancer
+        Value: !Join [ "", [ 'http://', !GetAtt UdagramLB.DNSName ]]
+        Export:
+            Name: !Sub ${EnvironmentName}-LB-DNSName
