@@ -241,7 +241,7 @@ Resources:
             Roles:
             - Ref: UdacityS3ReadOnlyEC2
 
-    LoadBalancerSecGroup:
+    LBSecurityGroup:
             Type: AWS::EC2::SecurityGroup
             Properties:
                 GroupDescription: Allow http traffic to and from load balancer
@@ -257,7 +257,7 @@ Resources:
                     ToPort: 80
                     CidrIp: 0.0.0.0/0
 
-    WebServerSecGroup:
+    UdagramSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
             GroupDescription: Allow http and ssh to our load balancer
@@ -277,7 +277,7 @@ Resources:
                 ToPort: 65535
                 CidrIp: 0.0.0.0/0
 
-    WebAppLaunchConfig:
+    UdagramLaunchConfig:
         Type: AWS::AutoScaling::LaunchConfiguration
         Properties:
             UserData:
@@ -293,16 +293,17 @@ Resources:
                     unzip -o udacity.zip
                     cp -pir udacity/index.html .
             ImageId: ami-06d51e91cea0dac8d
+            KeyName: Sagar_AWS
             IamInstanceProfile: !Ref ProfileWithRolesForOurApp
             SecurityGroups:
-            -   Ref: WebServerSecGroup
+            -   Ref: UdagramSecGroup
             InstanceType: !Ref 'InstanceType'
             BlockDeviceMappings:
-            -   DeviceName: "/dev/sdk"
+            -   DeviceName: "/dev/sda"
                 Ebs:
                     VolumeSize: '10' #10GB
 
-    WebAppTargetGroup:
+    UdagramTargetGroup:
         Type: AWS::ElasticLoadBalancingV2::TargetGroup
         Properties:
             HealthCheckIntervalSeconds: 10
@@ -315,24 +316,24 @@ Resources:
             UnhealthyThresholdCount: 5
             VpcId: !Ref VPC
 
-    WebAppGroup:
+    UgadramGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties:
             VPCZoneIdentifier:
             - !Ref PrivateSubnet1
             - !Ref PrivateSubnet2
             LaunchConfigurationName:
-                Ref: WebAppLaunchConfig
+                Ref: UdagramLaunchConfig
             MinSize: '4'
             MaxSize: '6'
             TargetGroupARNs:
-            -   Ref: WebAppTargetGroup
+            -   Ref: UdagramTargetGroup
 
-    WebAppLB:
+    UdagramLoadBalancer:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
             SecurityGroups:
-            - Ref: LoadBalancerSecGroup
+            - Ref: LBSecurityGroup
             Subnets:
             - !Ref PublicSubnet1
             - !Ref PublicSubnet2
@@ -342,9 +343,9 @@ Resources:
             DefaultActions:
             -   Type: forward
                 TargetGroupArn:
-                    Ref: WebAppTargetGroup
+                    Ref: UdagramTargetGroup
             LoadBalancerArn:
-                Ref: WebAppLB
+                Ref: UdagramLoadBalancer
             Port: 80
             Protocol: HTTP
 
@@ -353,7 +354,7 @@ Resources:
         Properties:
             Actions:
             -   Type: forward
-                TargetGroupArn: !Ref 'WebAppTargetGroup'
+                TargetGroupArn: !Ref 'UdagramTargetGroup'
             Conditions:
             -   Field: path-pattern
                 Values: [/]
@@ -361,6 +362,12 @@ Resources:
             Priority: 1
 
 Outputs:
+
+    UdagramLoadBalancerDNSName:
+      Description: DNS name or Public URL of the Load Balancer
+      Value: !Join [ "", [ 'http://', !GetAtt UdagramLoadBalancer.DNSName ]]
+      Export:
+          Name: !Sub ${EnvironmentName}-LB-DNSName
 
     VPC:
         Description: A reference to the created VPC
@@ -421,9 +428,3 @@ Outputs:
         Value: !Ref PrivateSubnet2
         Export:
           Name: !Sub ${EnvironmentName}-PRI2-SN
-
-    WebAppLoadBalancerDNSName:
-        Description: DNS name or Public URL of the Load Balancer
-        Value: !Join [ "", [ 'http://', !GetAtt WebAppLB.DNSName ]]
-        Export:
-            Name: !Sub ${EnvironmentName}-LB-DNSName
