@@ -293,7 +293,6 @@ Resources:
                     unzip -o udacity.zip
                     cp -pir udacity/index.html .
             ImageId: ami-06d51e91cea0dac8d
-            KeyName: Sagar_AWS
             IamInstanceProfile: !Ref ProfileWithRolesForOurApp
             SecurityGroups:
             -   Ref: WebServerSecGroup
